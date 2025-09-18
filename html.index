@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-container {
+      width: 400px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #0077b6;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .chat-body {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .bot-message {
+      background: #e6f2ff;
+      align-self: flex-start;
+    }
+    .user-message {
+      background: #0077b6;
+      color: white;
+      align-self: flex-end;
+    }
+    .chat-footer {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .chat-footer input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+      font-size: 14px;
+      background: #f0f0f0;
+    }
+    .chat-footer button {
+      background: #0077b6;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-left: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .chat-footer button:hover {
+      background: #005f87;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">🏥 Hospital Chatbot</div>
+    <div class="chat-body" id="chatBody">
+      <div class="message bot-message">Hello! I am your hospital assistant. How can I help you today?</div>
+    </div>
+    <div class="chat-footer">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBody = document.getElementById("chatBody");
+    const userInput = document.getElementById("userInput");
+
+    let bookingStep = 0;
+    let appointmentData = { name: "", department: "", date: "", time: "" };
+
+    function sendMessage() {
+      const text = userInput.value.trim();
+      if (text === "") return;
+
+      addMessage(text, "user-message");
+      userInput.value = "";
+
+      setTimeout(() => {
+        handleResponse(text.toLowerCase());
+      }, 500);
+    }
+
+    function addMessage(text, className) {
+      const msg = document.createElement("div");
+      msg.classList.add("message", className);
+      msg.innerText = text;
+      chatBody.appendChild(msg);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function handleResponse(input) {
+      if (bookingStep > 0) {
+        handleBooking(input);
+        return;
+      }
+
+      const reply = getBotResponse(input);
+      addMessage(reply, "bot-message");
+
+      if (input.includes("appointment") || input.includes("book")) {
+        bookingStep = 1;
+        setTimeout(() => {
+          addMessage("Sure! Let's book your appointment. Please tell me your full name.", "bot-message");
+        }, 600);
+      }
+    }
+
+    function handleBooking(input) {
+      if (bookingStep === 1) {
+        appointmentData.name = input;
+        addMessage("Great! Which department do you want to visit? (e.g., Cardiology, Pediatrics, Orthopedics)", "bot-message");
+        bookingStep = 2;
+      } else if (bookingStep === 2) {
+        appointmentData.department = input;
+        addMessage("Please provide a preferred date (YYYY-MM-DD).", "bot-message");
+        bookingStep = 3;
+      } else if (bookingStep === 3) {
+        appointmentData.date = input;
+        addMessage("And what time would you like? (e.g., 10:30 AM)", "bot-message");
+        bookingStep = 4;
+      } else if (bookingStep === 4) {
+        appointmentData.time = input;
+        addMessage(
+          ✅ Appointment booked!\n\n📌 Name: ${appointmentData.name}\n🏥 Department: ${appointmentData.department}\n📅 Date: ${appointmentData.date}\n⏰ Time: ${appointmentData.time},
+          "bot-message"
+        );
+        bookingStep = 0;
+        appointmentData = { name: "", department: "", date: "", time: "" };
+      }
+    }
+
+    function getBotResponse(input) {
+      if (input.includes("hello") || input.includes("hi")) {
+        return "Hello! How can I assist you today?";
+      } else if (input.includes("doctor")) {
+        return "We have doctors available in General Medicine, Pediatrics, Orthopedics, and Cardiology. Who would you like to consult?";
+      } else if (input.includes("time") || input.includes("hours")) {
+        return "Our hospital is open 24/7. OPD timings are 9 AM - 7 PM.";
+      } else if (input.includes("emergency")) {
+        return "In case of emergency, please call our hotline: 108 🚑";
+      } else if (input.includes("thank")) {
+        return "You're welcome! Wishing you good health.";
+      } else {
+        return "I'm here to assist with hospital info and appointments. Try asking about doctors, timings, or book an appointment.";
+      }
+    }
+
+    userInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
